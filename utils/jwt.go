@@ -1,0 +1,42 @@
+package utils
+
+import (
+	"os"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+)
+
+type Claims struct {
+	UserID uint   `json:"user_id"`
+	Role   string `json:"role"`
+	jwt.RegisteredClaims
+}
+
+func GenerateToken(userID uint, role string) (string, error) {
+	secret := []byte(os.Getenv("JWT_SECRET"))
+	claims := Claims{
+		UserID: userID,
+		Role:   role,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(secret)
+}
+
+func ParseToken(tokenStr string) (*Claims, error) {
+	secret := []byte(os.Getenv("JWT_SECRET"))
+	token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(t *jwt.Token) (interface{}, error) {
+		return secret, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	if c, ok := token.Claims.(*Claims); ok && token.Valid {
+		return c, nil
+	}
+	return nil, jwt.ErrTokenInvalidClaims
+}
