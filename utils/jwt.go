@@ -16,7 +16,7 @@ type Claims struct {
 func GenerateToken(userID uint, role string) (string, error) {
 	secret := []byte(os.Getenv("JWT_SECRET"))
 	claims := Claims{
-		UserID: userID,
+		UserID: id,
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
@@ -27,16 +27,4 @@ func GenerateToken(userID uint, role string) (string, error) {
 	return token.SignedString(secret)
 }
 
-func ParseToken(tokenStr string) (*Claims, error) {
-	secret := []byte(os.Getenv("JWT_SECRET"))
-	token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(t *jwt.Token) (interface{}, error) {
-		return secret, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	if c, ok := token.Claims.(*Claims); ok && token.Valid {
-		return c, nil
-	}
-	return nil, jwt.ErrTokenInvalidClaims
-}
+
