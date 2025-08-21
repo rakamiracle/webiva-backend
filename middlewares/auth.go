@@ -15,26 +15,16 @@ func AuthRequired() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing bearer token"})
 			return
 		}
-		token := strings.TrimPrefix(auth, "Bearer ")
-		claims, err := utils.ParseToken(token)
-		if err != nil {
+		tokenStr := strings.TrimPrefix(auth, "Bearer ")
+
+		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
+			return []byte(os.Getenv("JWT_SECRET")), nil
+		})
+		if err != nil || !token.Valid {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
 			return
 		}
-		// simpan ke context
-		c.Set("user_id", claims.UserID)
-		c.Set("role", claims.Role)
 		c.Next()
 	}
 }
 
-func AdminOnly() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		role, _ := c.Get("role")
-		if role != "admin" {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "admin only"})
-			return
-		}
-		c.Next()
-	}
-}
