@@ -16,7 +16,7 @@ type Claims struct {
 func GenerateToken(userID uint, role string) (string, error) {
 	secret := []byte(os.Getenv("JWT_SECRET"))
 	claims := Claims{
-		UserID: id,
+		UserID: userID,
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
